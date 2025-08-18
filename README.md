@@ -1,4 +1,4 @@
-<img src = "figures/Untitled-1.png" align = "right" width = "10%"/>
+<img src = "figures/Logo for Package 2font.png" align = "left" width = "20%"/>
 
 # `uRbano` - functions for spatial sampling across built density gradients
 `uRbano` is designed to support spatial sampling design across urban environmental gradients, to guide users in building reproducible, gradient-informed experimental designs for ecological research in urban and human-modified landscapes.
@@ -17,4 +17,4 @@ coming soon...
 
 `uRbano` pulls building footprints from several sources depending on the region of interest
 
-`uRbano` uses the `rosm` package to access the OpenStreetMaps Overpass API to import road features for calculating road density metrics
+`uRbano` uses the `osmdata` package to access the OpenStreetMaps Overpass API to import road features for calculating road density metrics
