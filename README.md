@@ -15,6 +15,6 @@ coming soon...
 
 ## Sources
 
-`uRbano` pulls building footprints from several sources depending on the region of interest
+`uRbano` pulls building footprints from various releases of Microsoft's [Open Building Footprints](https://github.com/microsoft/GlobalMLBuildingFootprints/tree/main?tab=readme-ov-file) depending on the region of interest
 
 `uRbano` uses the `osmdata` package to access the OpenStreetMaps Overpass API to import road features for calculating road density metrics
