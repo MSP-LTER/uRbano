@@ -1,3 +1,5 @@
+<img src = "figures/Untitled-1.png" align = "right" width = "10%"/>
+
 # `uRbano` - functions for spatial sampling across built density gradients
 `uRbano` is designed to support spatial sampling design across urban environmental gradients, to guide users in building reproducible, gradient-informed experimental designs for ecological research in urban and human-modified landscapes.
 
