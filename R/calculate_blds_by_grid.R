@@ -35,9 +35,6 @@ calculate_blds_by_grid<-function(grid, blds){
   sumars<-bld_clips%>%group_by(ID)%>%summarise(tarea=sum(area))
   
   bld_jn<-left_join(grid, st_drop_geometry(sumars), by="ID")
-  # Calculate lengths and sum by grid square
-  #bld_clips$area <- st_area(bld_clips)
-  #total_ar_by_cell <- aggregate(bld_clips$area, by = list(bld_clips$ID), FUN = st_area)$x
   
   
   # Return as a numeric vector
