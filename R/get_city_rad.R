@@ -6,8 +6,6 @@
 #'
 #' @return (sfc) sf polgon simple feature collection of 1 feature with WGS 84 CRS
 #'
-#' @importFrom 
-#'
 #' @export
 #'
 #' @examples
