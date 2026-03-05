@@ -18,7 +18,7 @@
 #' plot(sampling_scenarios[[2]])
 #' 
 # SAMPLING FUNCTIONS
-create_sampling_functions <- function(hex_data, center_point=st_centroid(st_union(hex_data)), sample_size=20, sample_type=NULL) {
+create_sampling_functions <- function(hex_data, center_point=st_centroid(st_union(st_transform(hex_data, crs=4326))), sample_size=20, sample_type=NULL) {
   hex_data<-st_transform(hex_data, crs=4326)
   cat("Validating data...\n")
   # Check required columns - removed rarefied_richness
@@ -43,13 +43,14 @@ create_sampling_functions <- function(hex_data, center_point=st_centroid(st_unio
   hex_data<-clean_data
   # Cardinal transects
   cardinal_transects <- function() {
+    
     angles <- c(0, pi/2, pi, 3*pi/2)
     transect_lines <- map(angles, ~{
       end_coords <- st_coordinates(center_point) + c(cos(.x), sin(.x)) * 100000
       st_linestring(rbind(st_coordinates(center_point), end_coords))
     })
     transects_sf <- st_sf(geometry = st_sfc(transect_lines, crs = st_crs(hex_data)))
-    transect_cells <- st_intersection(hex_data, transects_sf)
+    transect_cells <- hex_data%>%st_filter(transects_sf)
     
     if (nrow(transect_cells) > 0) {
       if (nrow(transect_cells) >= sample_size) {
@@ -62,12 +63,13 @@ create_sampling_functions <- function(hex_data, center_point=st_centroid(st_unio
   
   # Random transect
   random_transect <- function() {
+    
     angle <- runif(1, 0, 2 * pi)
     end_coords <- st_coordinates(center_point) + c(cos(angle), sin(angle)) * 100000
     line_matrix <- rbind(st_coordinates(center_point), end_coords)
     line <- st_linestring(line_matrix)
     transect_sf <- st_sf(geometry = st_sfc(line, crs = st_crs(hex_data)))
-    intersected <- st_intersection(hex_data, transect_sf)
+    intersected <- hex_data%>%st_filter(transect_sf)
     
     if (nrow(intersected) > 0) {
       if (nrow(intersected) >= sample_size) {
@@ -144,11 +146,11 @@ create_sampling_functions <- function(hex_data, center_point=st_centroid(st_unio
     warning("returning list of all sample types: cardinal_transects,concentric_rings,density_stratified,
   simple_random, or random_transect")
     return(list(
-      cardinal_transects <- cardinal_transects(),
-      concentric_rings <- concentric_rings(),
-      density_stratified <- density_stratified(),
-      simple_random <- simple_random(),
-      random_transect <- random_transect()
+      cardinal_transects = cardinal_transects(),
+      concentric_rings = concentric_rings(),
+      density_stratified = density_stratified(),
+      simple_random = simple_random(),
+      random_transect = random_transect()
     ))
   }else if(sample_type=="cardinal_transects"){
     cardinal_transects()
