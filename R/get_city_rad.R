@@ -21,7 +21,7 @@
 #function to create a radius around user-specified city center
 get_city_rad <- function(city, radius) {
   # Find matching cities
-  cty <- subset(world.cities, world.cities$name == city)
+  cty <- subset(maps::world.cities, maps::world.cities$name == city)
   
   # Handle case where no cities are found
   if(nrow(cty) == 0) {
