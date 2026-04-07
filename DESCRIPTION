@@ -13,20 +13,17 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Imports:
     dplyr,
-    furrr,
     geojsonsf,
     magrittr,
     maps,
     mgcv,
     osmdata,
-    patchwork,
     purrr,
     readr,
     sf,
     terra,
     units,
-    utils,
-    viridis
+    utils
 Suggests:
     class,
     KernSmooth,
