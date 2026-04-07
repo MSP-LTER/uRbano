@@ -17,12 +17,16 @@ Imports:
     geojsonsf,
     magrittr,
     maps,
+    mgcv,
     osmdata,
+    patchwork,
+    purrr,
     readr,
     sf,
     terra,
     units,
-    utils
+    utils,
+    viridis
 Suggests:
     class,
     KernSmooth,
