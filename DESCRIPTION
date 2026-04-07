@@ -1,0 +1,35 @@
+Package: uRbano
+Title: Spatial Sampling Across Built Density Gradients
+Version: 0.0.2026.4.7
+Authors@R: c(
+    person("Mary", "Marek-Spartz", , "patt0335@umn.edu", role = c("aut", "cre")),
+    person("Luis", "Santiago-Rosario", , "lsantiag@umn.edu", role = c("aut")))
+Maintainer: Mary Marek-Spartz <patt0335@umn.edu>
+Description: Spatial sampling design across urban environmental gradients, to guide users in building reproducible, gradient-informed experimental designs for ecological research in urban and human-modified landscapes.
+Language: en-US
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Imports:
+    dplyr,
+    geojsonsf,
+    magrittr,
+    maps,
+    osmdata,
+    readr,
+    sf,
+    terra,
+    units,
+    utils
+Suggests:
+    class,
+    KernSmooth,
+    knitr,
+    pkgdown,
+    rcmdcheck,
+    rmarkdown,
+    roxygen2
+URL: https://github.com/MSP-LTER/uRbano
+BugReports: https://github.com/MSP-LTER/uRbano/issues
+VignetteBuilder: knitr
