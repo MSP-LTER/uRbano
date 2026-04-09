@@ -1,0 +1,606 @@
+---
+title: "Getting started with urban spatial sampling in uRbano"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with urban spatial sampling in uRbano}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 7,
+  fig.height = 6,
+  fig.align = "center"
+)
+```
+
+## Introduction
+
+`uRbano` is designed to support urban ecological workflows that combine spatial data acquisition, gridded summaries of urban structure, and alternative field sampling designs. This vignette walks through a complete example in which we build a circular study extent around Minneapolis, generate a hexagonal grid, quantify buildings and roads within each grid cell, and compare multiple candidate sampling schemes.
+
+The workflow has five main parts:
+
+1. define the study area,
+2. create the sampling grid,
+3. prepare building and road layers,
+4. calculate grid-level urban metrics, and
+5. generate and visualize sampling schemes.
+
+Because some functions rely on external spatial data downloads, you may prefer to set the download-heavy chunks to `eval = FALSE` for package checks, or replace them with bundled example objects in a production vignette.
+
+## Installation
+
+`uRbano` is currently available on GitHub. We recommend installing it using the `pak` package, which provides fast and reliable dependency resolution.
+
+If you do not have `pak` installed, first run:
+```{r}
+install.packages("pak")
+library(pak)
+pak::pak("MSP-LTER/uRbano")
+```
+
+
+## Load packages
+
+```{r}
+library(uRbano)
+library(sf)
+library(dplyr)
+library(ggplot2)
+library(furrr)
+library(purrr)
+library(patchwork)
+```
+
+## 1. Create a city-centered study extent
+
+We start by creating a circular buffer around Minneapolis with a radius of 30 km.
+
+```{r, eval = FALSE}
+city_rad <- get_city_rad("Minneapolis", radius = 20000)
+city_rad
+```
+
+Many spatial calculations involving length and area are easier in a projected coordinate reference system, so we transform the study extent to meters.
+
+```{r, eval = FALSE}
+city_rad_m <- transform_to_meters(city_rad)
+city_rad_m
+```
+
+## 2. Generate a hexagonal grid
+
+Next, we divide the city extent into hexagonal cells of 1 km.
+
+```{r, eval = FALSE}
+hex_grid <- radius_hex_grid(city_rad_m, hex_size = 1000)
+hex_grid
+```
+
+Hexagons are useful in ecological sampling because they provide a regular tessellation while reducing some directional bias relative to square grids.
+
+## 3. Download and prepare building footprints
+
+We then obtain building footprints for Minnesota and trim them to the Minneapolis study area. This step can take some time depending on the regions extent. If the city is in a US State or a Canadian Province use the specific name for the state or province. For other cities in the world use Country name. Check https://github.com/microsoft/GlobalMLBuildingFootprints for data availability per country.
+
+```{r, eval = FALSE}
+bldgs <- get_bldgs("Minnesota")
+bldgs_trim <- fix_n_trim_bldgs(bldgs, city_rad)
+```
+
+In some cases the trimming step may fail because of geometry issues or data inconsistencies. The fallback below keeps the workflow moving by reverting to the original building layer.
+
+```{r, eval = FALSE}
+if (!inherits(bldgs_trim, "sf")) {
+  warning("fix_n_trim_bldgs failed, using original buildings")
+  bldgs_trim <- bldgs
+}
+```
+
+Finally, we project buildings into the same metric CRS used by the study grid.
+
+```{r, eval = FALSE}
+bldgs_trim_m <- transform_to_meters(bldgs_trim)
+```
+
+## 4. Download and prepare roads
+
+We also extract roads within the study area and transform them to meters. This part can also take some time. The larger the radius around the city, the more time it may take to download the road length data.
+
+```{r, eval = FALSE}
+roads <- extract_osm_rds(city_rad)
+roads_m <- transform_to_meters(roads)
+```
+
+## 5. Calculate grid-level urban metrics
+
+Now we summarize two features of urban structure inside each hexagon:
+
+- total building area per grid cell
+- total road length per grid cell
+
+```{r, eval = FALSE}
+hex_grid$bldg_ars <- calculate_blds_by_grid(hex_grid, bldgs_trim_m)
+hex_grid$rd_len   <- calculate_rds_by_grid(hex_grid, roads_m)
+```
+
+These variables can later be used as predictors, descriptors of the urban environment, or stratification variables for sampling.
+
+## 6. Create a simple density index
+
+To create a coarse urbanization gradient, we classify building area into quintiles. For readability, this vignette uses the name `density_index`.
+
+```{r, eval = FALSE}
+hex_grid$dns_dx_ <- cut(
+  hex_grid$bldg_ars,
+  breaks = quantile(
+    hex_grid$bldg_ars,
+    probs = seq(0, 1, 0.2),
+    na.rm = TRUE
+  ),
+  include.lowest = TRUE,
+  labels = FALSE
+)
+```
+
+This index is a simple relative measure of built intensity across the study area.
+
+## 7. Create alternative sampling schemes
+
+We next generate a set of candidate sampling schemes with a target sample size of 30 cells.
+
+```{r, eval = FALSE}
+samples <- create_sampling_functions(
+  hex_grid,
+  sample_size = 30,
+  sample_type = NULL
+)
+
+names(samples)
+```
+
+Depending on the package version and available methods, this object may include designs such as cardinal transects, concentric rings, density-stratified sampling, simple random sampling, and random transects.
+
+## 8. Plot the sampling schemes
+
+The helper function below plots the full hexagonal grid using the density index as a grayscale background and overlays the sampled cells in red.
+
+```{r}
+plot_sample_scheme <- function(grid, sample_sf, title = NULL) {
+  ggplot() +
+    geom_sf(
+      data = grid,
+      aes(fill = density_index),
+      color = "white",
+      linewidth = 0.1
+    ) +
+    geom_sf(
+      data = sample_sf,
+      fill = NA,
+      color = "red",
+      linewidth = 0.8
+    ) +
+    scale_fill_gradient(
+      low = "white",
+      high = "black",
+      name = "Density"
+    ) +
+    labs(title = title) +
+    theme_minimal() +
+    theme(
+      panel.grid = element_blank(),
+      axis.text = element_blank(),
+      axis.title = element_blank()
+    )
+}
+```
+
+You can then visualize each design.
+
+```{r, eval = FALSE}
+plot_sample_scheme(hex_grid, samples$cardinal_transects, "Cardinal transects")
+plot_sample_scheme(hex_grid, samples$concentric_rings, "Concentric rings")
+plot_sample_scheme(hex_grid, samples$density_stratified, "Density stratified")
+plot_sample_scheme(hex_grid, samples$simple_random, "Simple random")
+plot_sample_scheme(hex_grid, samples$random_transect, "Random transect")
+```
+## 9. Evaluating sampling performance with bootstrapping
+
+We next evaluate how consistently each sampling design captures the full urban landscape. For each sampling scenario and sample size, we repeatedly redraw sites and compare the resulting estimates of road length and building area against the full population of grid cells.
+The bootstrap analysis below is more computationally intensive than the earlier examples. For vignette speed, users may wish to run fewer bootstrap replicates.
+
+```{r}
+library(sf)
+library(dplyr)
+library(purrr)
+library(furrr)
+library(tidyr)
+library(ggplot2)
+library(patchwork)
+
+# Use sequential processing for vignette stability
+plan(sequential)
+
+# ============================================================
+# 1. Validate input data
+# ============================================================
+
+validate_and_prepare_data <- function(hex_data) {
+  message("Validating data...")
+
+  required_columns <- c("rd_len", "bldg_ars", "dns_dx_")
+  missing_columns <- required_columns[!required_columns %in% names(hex_data)]
+
+  if (length(missing_columns) > 0) {
+    stop("Missing required columns: ", paste(missing_columns, collapse = ", "))
+  }
+
+  clean_data <- hex_data %>%
+    filter(!is.na(rd_len), !is.na(bldg_ars), !is.na(dns_dx_))
+
+  if (nrow(clean_data) < 10) {
+    stop("Not enough complete cases (minimum 10 required).")
+  }
+
+  message("Data validation passed. Clean dataset has ", nrow(clean_data), " grid cells.")
+  clean_data
+}
+
+# ============================================================
+# 2. Sampling functions
+# ============================================================
+
+create_bootstrap_sampling_functions <- function() {
+
+  cardinal_transects <- function(hex_data, center_point, sample_size) {
+    angles <- c(0, pi/2, pi, 3*pi/2)
+
+    transect_lines <- map(angles, ~{
+      end_coords <- st_coordinates(center_point) + c(cos(.x), sin(.x)) * 100000
+      st_linestring(rbind(st_coordinates(center_point), end_coords))
+    })
+
+    transects_sf <- st_sf(
+      geometry = st_sfc(transect_lines, crs = st_crs(hex_data))
+    )
+
+    transect_cells <- st_intersection(hex_data, transects_sf)
+
+    if (nrow(transect_cells) == 0) return(NULL)
+    if (nrow(transect_cells) >= sample_size) return(sample_n(transect_cells, sample_size))
+
+    transect_cells
+  }
+
+  random_transect <- function(hex_data, center_point, sample_size) {
+    angle <- runif(1, 0, 2 * pi)
+    end_coords <- st_coordinates(center_point) + c(cos(angle), sin(angle)) * 100000
+
+    line <- st_linestring(rbind(st_coordinates(center_point), end_coords))
+    transect_sf <- st_sf(
+      geometry = st_sfc(line, crs = st_crs(hex_data))
+    )
+
+    intersected <- st_intersection(hex_data, transect_sf)
+
+    if (nrow(intersected) == 0) return(NULL)
+    if (nrow(intersected) >= sample_size) return(sample_n(intersected, sample_size))
+
+    intersected
+  }
+
+  simple_random <- function(hex_data, center_point, sample_size) {
+    sample_n(hex_data, sample_size)
+  }
+
+  concentric_rings <- function(hex_data, center_point, sample_size) {
+    radii <- c(10000, 20000, 30000, 40000)
+    samples_per_ring <- 5
+    sampled_cells_list <- list()
+
+    for (j in seq_along(radii)) {
+      ring_geom <- if (j == 1) {
+        st_buffer(center_point, radii[j])
+      } else {
+        st_difference(
+          st_buffer(center_point, radii[j]),
+          st_buffer(center_point, radii[j - 1])
+        )
+      }
+
+      ring_sf <- st_sf(
+        geometry = st_sfc(ring_geom, crs = st_crs(hex_data))
+      )
+
+      cells_in_ring <- st_intersection(hex_data, ring_sf)
+
+      if (nrow(cells_in_ring) > 0) {
+        n_to_sample <- min(nrow(cells_in_ring), samples_per_ring)
+        sampled <- sample_n(cells_in_ring, n_to_sample)
+
+        sampled$ring_id <- j
+        sampled$inner_radius <- ifelse(j == 1, 0, radii[j - 1])
+        sampled$outer_radius <- radii[j]
+
+        sampled_cells_list[[j]] <- sampled
+      }
+    }
+
+    sampled_cells <- bind_rows(sampled_cells_list)
+
+    if (nrow(sampled_cells) == 0) return(NULL)
+    if (nrow(sampled_cells) > sample_size) return(sample_n(sampled_cells, sample_size))
+
+    sampled_cells
+  }
+
+  density_stratified <- function(hex_data, center_point, sample_size) {
+    density_levels <- unique(hex_data$dns_dx_)
+    samples_per_level <- ceiling(sample_size / length(density_levels))
+
+    stratified_list <- map(density_levels, ~{
+      subset <- filter(hex_data, dns_dx_ == .x)
+      if (nrow(subset) > 0) {
+        n_to_sample <- min(nrow(subset), samples_per_level)
+        sample_n(subset, n_to_sample)
+      }
+    })
+
+    sampled_cells <- bind_rows(stratified_list)
+
+    if (nrow(sampled_cells) == 0) return(NULL)
+    if (nrow(sampled_cells) > sample_size) return(sample_n(sampled_cells, sample_size))
+
+    sampled_cells
+  }
+
+  list(
+    cardinal_transects = cardinal_transects,
+    concentric_rings = concentric_rings,
+    density_stratified = density_stratified,
+    simple_random = simple_random,
+    random_transect = random_transect
+  )
+}
+
+# ============================================================
+# 3. One bootstrap iteration
+# ============================================================
+
+run_single_bootstrap <- function(iter, scenario_id, sample_size,
+                                 hex_data, center_point, population_stats) {
+  set.seed(iter * 100 + scenario_id * 10 + sample_size)
+
+  sampling_functions <- create_bootstrap_sampling_functions()
+  scenario_names <- names(sampling_functions)
+  scenario_name <- scenario_names[scenario_id]
+  scenario_func <- sampling_functions[[scenario_name]]
+
+  tryCatch({
+    sampled_cells <- scenario_func(hex_data, center_point, sample_size)
+
+    if (is.null(sampled_cells) || nrow(sampled_cells) == 0) {
+      return(NULL)
+    }
+
+   sampled_cells %>%
+  st_drop_geometry() %>%
+  summarise(
+    mean_rd_len = mean(rd_len, na.rm = TRUE),
+    sd_rd_len = sd(rd_len, na.rm = TRUE),
+    mean_bldg_ars = mean(bldg_ars, na.rm = TRUE),
+    sd_bldg_ars = sd(bldg_ars, na.rm = TRUE),
+    n_cells = n()
+  ) %>%   # <-- THIS PIPE IS CRITICAL
+  mutate(
+    iteration = iter,
+    scenario = scenario_name,
+    sample_size = sample_size,
+
+    bias_rd_len = mean_rd_len - population_stats$mean_rd_len,
+    bias_bldg_ars = mean_bldg_ars - population_stats$mean_bldg_ars,
+
+    rel_bias_rd_len = 100 * bias_rd_len / population_stats$mean_rd_len,
+    rel_bias_bldg_ars = 100 * bias_bldg_ars / population_stats$mean_bldg_ars,
+
+    cv_rd_len = sd_rd_len / mean_rd_len,
+    cv_bldg_ars = sd_bldg_ars / mean_bldg_ars,
+
+    sq_error_rd_len = bias_rd_len^2,
+    sq_error_bldg_ars = bias_bldg_ars^2
+  )
+  }, error = function(e) {
+    NULL
+  })
+}
+
+# ============================================================
+# 4. Run bootstrap for a set of sample sizes
+# ============================================================
+
+run_bootstrap_for_sample_size <- function(sample_size, n_bootstrap,
+                                          hex_data, center_point, population_stats) {
+  all_combinations <- expand.grid(
+    iteration = seq_len(n_bootstrap),
+    scenario_id = 1:5
+  )
+
+  future_pmap_dfr(
+    list(
+      all_combinations$iteration,
+      all_combinations$scenario_id,
+      rep(sample_size, nrow(all_combinations))
+    ),
+    run_single_bootstrap,
+    hex_data = hex_data,
+    center_point = center_point,
+    population_stats = population_stats,
+    .options = furrr_options(seed = TRUE)
+  )
+}
+
+# ============================================================
+# 5. Summarize performance metrics
+# ============================================================
+
+calculate_performance_metrics <- function(bootstrap_results) {
+  bootstrap_results %>%
+    group_by(scenario, sample_size) %>%
+    summarise(
+      rd_len_cv_mean = mean(cv_rd_len, na.rm = TRUE),
+      rd_len_cv_sd = sd(cv_rd_len, na.rm = TRUE),
+      rd_len_rmse = sqrt(mean(sq_error_rd_len, na.rm = TRUE)),
+      rd_len_rel_bias_mean = mean(rel_bias_rd_len, na.rm = TRUE),
+      rd_len_rel_bias_sd = sd(rel_bias_rd_len, na.rm = TRUE),
+
+      bldg_ars_cv_mean = mean(cv_bldg_ars, na.rm = TRUE),
+      bldg_ars_cv_sd = sd(cv_bldg_ars, na.rm = TRUE),
+      bldg_ars_rmse = sqrt(mean(sq_error_bldg_ars, na.rm = TRUE)),
+      bldg_ars_rel_bias_mean = mean(rel_bias_bldg_ars, na.rm = TRUE),
+      bldg_ars_rel_bias_sd = sd(rel_bias_bldg_ars, na.rm = TRUE),
+
+      n_iterations = n(),
+      .groups = "drop"
+    )
+}
+
+# ============================================================
+# 6. Plot performance summaries
+# ============================================================
+
+create_performance_plots <- function(performance_metrics) {
+  scenario_colors <- c(
+    "cardinal_transects" = "#BB3333",
+    "concentric_rings" = "#F26357",
+    "density_stratified" = "#F5A994",
+    "simple_random" = "#66A7D4",
+    "random_transect" = "#355B8D"
+  )
+
+  create_variable_plot <- function(metric_data, variable_name, variable_label) {
+    plot_data <- metric_data %>%
+      dplyr::select(
+        scenario, sample_size,
+        cv_mean = all_of(paste0(variable_name, "_cv_mean")),
+        rmse = all_of(paste0(variable_name, "_rmse")),
+        rel_bias_mean = all_of(paste0(variable_name, "_rel_bias_mean"))
+      ) %>%
+      pivot_longer(
+        cols = c(cv_mean, rmse, rel_bias_mean),
+        names_to = "metric",
+        values_to = "value"
+      ) %>%
+      mutate(
+        metric = factor(
+          metric,
+          levels = c("cv_mean", "rmse", "rel_bias_mean"),
+          labels = c("Coefficient of Variation", "RMSE", "Relative Bias (%)")
+        )
+      )
+
+    ggplot(plot_data, aes(x = sample_size, y = value, color = scenario)) +
+      geom_line(linewidth = 1.1) +
+      geom_point(size = 2) +
+      geom_hline(
+        data = data.frame(metric = "Relative Bias (%)", y = 0),
+        aes(yintercept = y),
+        linetype = "dashed",
+        color = "red"
+      ) +
+      facet_wrap(~metric, scales = "free_y", ncol = 1) +
+      scale_color_manual(values = scenario_colors) +
+      labs(
+        title = paste("Performance metrics:", variable_label),
+        x = "Sample size",
+        y = "Metric value",
+        color = "Sampling scenario"
+      ) +
+      theme_minimal(base_size = 11) +
+      theme(
+        legend.position = "bottom",
+        strip.text = element_text(face = "bold"),
+        plot.title = element_text(face = "bold")
+      )
+  }
+
+  list(
+    road_length = create_variable_plot(performance_metrics, "rd_len", "Road length"),
+    building_area = create_variable_plot(performance_metrics, "bldg_ars", "Building area")
+  )
+}
+
+# ============================================================
+# 7. Run the example analysis
+# ============================================================
+
+hex_data <- validate_and_prepare_data(hex_grid)
+
+population_stats <- list(
+  mean_rd_len = mean(hex_data$rd_len, na.rm = TRUE),
+  mean_bldg_ars = mean(hex_data$bldg_ars, na.rm = TRUE)
+)
+
+center_point <- st_centroid(st_union(hex_data))
+
+# Small example settings for vignette speed
+sample_sizes <- c(10, 20, 30)
+n_bootstrap <- 25
+
+bootstrap_results <- map_dfr(
+  sample_sizes,
+  ~ run_bootstrap_for_sample_size(
+    sample_size = .x,
+    n_bootstrap = n_bootstrap,
+    hex_data = hex_data,
+    center_point = center_point,
+    population_stats = population_stats
+  )
+)
+
+performance_metrics <- calculate_performance_metrics(bootstrap_results)
+performance_plots <- create_performance_plots(performance_metrics)
+
+performance_plots$road_length
+performance_plots$building_area
+```
+
+
+## 10. Interpreting the designs
+
+The main value of this workflow is that it allows users to compare sampling designs under the same city extent and the same underlying urban gradient.
+
+For example, simple random sampling may provide broad but uneven representation of the city, while density-stratified sampling may better capture the full range of urban intensity. Transect-based approaches can be attractive when field logistics favor moving along linear routes or when the goal is to sample across strong spatial gradients.
+
+The most appropriate design depends on the ecological question, the target organisms, and practical constraints such as access, travel time, and replication.
+
+## 11. Notes for package development
+
+For package development, it is often best to avoid live downloads in vignettes that run during checks. Two common solutions are:
+
+- set data-download chunks to `eval = FALSE`, or
+- include small example datasets in the package and run the vignette with those objects instead.
+
+That approach makes the vignette faster, more reproducible, and less likely to fail because an external data source changes.
+
+## Summary
+
+In this vignette, we showed how `uRbano` can be used to:
+
+- define a city-based study extent,
+- generate a regular hexagonal sampling grid,
+- summarize buildings and roads within cells,
+- derive a simple density index, and
+- compare multiple sampling schemes for urban ecological fieldwork.
+
+This workflow provides a flexible starting point for designing spatial sampling strategies in cities.
+
+## Session information
+
+```{r, eval = FALSE}
+sessionInfo()
+```
