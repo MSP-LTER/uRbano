@@ -17,12 +17,12 @@
 #' 
 #function to get OSM roads from overpass API for the extent extracted from the city radius
 extract_osm_rds<-function(city_radius){
-  if(st_crs(city_radius)$epsg!=4326){city_radius<-st_transform(city_radius, crs=4326)}
+  if(sf::st_crs(city_radius)$epsg!=4326){city_radius<-sf::st_transform(city_radius, crs=4326)}
   cty_ex<-terra::ext(city_radius)
   
   #get roads from OSM API 
-  rds <- opq(bbox = c (cty_ex[1],cty_ex[3],cty_ex[2],cty_ex[4] )) %>%
-    add_osm_feature(key = "highway", value=c("primary", "motorway_link", "unclassified","tertiary","residential",   
+  rds <- osmdata::opq(bbox = c (cty_ex[1],cty_ex[3],cty_ex[2],cty_ex[4] )) %>%
+    osmdata::add_osm_feature(key = "highway", value=c("primary", "motorway_link", "unclassified","tertiary","residential",   
                                              "motorway","secondary","service","trunk","living_street", "trunk_link",
                                              "primary_link", "secondary_link","tertiary_link","road")) %>% osmdata_sf()
   wrds<-rds$osm_lines
