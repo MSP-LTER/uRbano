@@ -26,15 +26,15 @@ calculate_blds_by_grid<-function(grid, blds){
   }
   
   
-  grid<-grid%>%mutate(ID=rownames(grid))
+  grid<-grid%>%dplyr::mutate(ID=rownames(grid))
   
   
-  bld_clips <-st_intersection(grid, blds)
+  bld_clips <-sf::st_intersection(grid, blds)
   
-  bld_clips <- bld_clips%>%mutate(area=st_area(bld_clips))
-  sumars<-bld_clips%>%group_by(ID)%>%summarise(tarea=sum(area))
+  bld_clips <- bld_clips%>%dplyr::mutate(area=sf::st_area(bld_clips))
+  sumars<-bld_clips%>%dplyr::group_by(ID)%>%dplyr::summarise(tarea=sum(area))
   
-  bld_jn<-left_join(grid, st_drop_geometry(sumars), by="ID")
+  bld_jn<-dplyr::left_join(grid, sf::st_drop_geometry(sumars), by="ID")
   
   
   # Return as a numeric vector
