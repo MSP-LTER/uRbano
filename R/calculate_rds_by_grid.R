@@ -26,15 +26,15 @@ calculate_rds_by_grid <- function(grid, rds) {
     stop("Both grid and roads must be transformed to same UTM zone, use transform_US_utm()")
   }
   
-  grid<-grid%>%mutate(ID=rownames(grid))
+  grid<-grid%>%dplyr::mutate(ID=rownames(grid))
   
   
-  rd_clips <-st_intersection(grid, rds)
+  rd_clips <-sf::st_intersection(grid, rds)
   
-  rd_clips <- rd_clips%>%mutate(rd_len=st_length(rd_clips))
-  sumlen<-rd_clips%>%group_by(ID)%>%summarise(tlen=sum(rd_len))
+  rd_clips <- rd_clips%>%dplyr::mutate(rd_len=sf::st_length(rd_clips))
+  sumlen<-rd_clips%>%dplyr::group_by(ID)%>%dplyr::summarise(tlen=sum(rd_len))
   
-  rd_jn<-left_join(grid, st_drop_geometry(sumlen), by="ID")
+  rd_jn<-dplyr::left_join(grid, sf::st_drop_geometry(sumlen), by="ID")
   
   # Return as a numeric vector
   return(drop_units(rd_jn$tlen))
