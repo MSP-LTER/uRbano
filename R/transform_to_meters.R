@@ -16,11 +16,11 @@
 #' 
 transform_to_meters <- function(sf_data, method = "web_mercator") {
   if (method == "web_mercator") {
-    return(st_transform(sf_data, 3857))
+    return(sf::st_transform(sf_data, 3857))
     
   } else if (method == "NAD") {
     transform_NAD_utm<-function(rad){
-      longitude <- st_coordinates(st_centroid(rad))[, 1]
+      longitude <- sf::st_coordinates(sf::st_centroid(rad))[, 1]
       if(longitude>=(-126) && longitude<(-120)){print("z10")}
       else if(longitude>=(-120) && longitude<(-114)){return(st_transform(rad,crs=26911))}
       else if(longitude>=(-114) && longitude<(-108)){return(st_transform(rad,crs=26912))}
@@ -41,7 +41,7 @@ transform_to_meters <- function(sf_data, method = "web_mercator") {
       else if(longitude>=(-138) && longitude<(-132)){return(st_transform(rad,crs=26908))}
       else if(longitude>=(-132) && longitude<(-126)){return(st_transform(rad,crs=26909))}
       else{warning("Coordinates outside North America UTM Zones")
-        return(st_transform(rad, crs = 4326))
+        return(sf::st_transform(rad, crs = 4326))
       }
     }
     
