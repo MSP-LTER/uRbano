@@ -6,7 +6,8 @@ This is an initial submission of the `uRbano` package.
 * macOS Darwin (aarch64), R 4.6.1
 
 ## R CMD check results
-0 errors | 0 warnings | 0 notes
+
+TODO
 
 ## Downstream dependencies
 There are currently no downstream dependencies for this package.
