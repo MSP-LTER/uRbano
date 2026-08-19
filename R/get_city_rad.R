@@ -2,11 +2,10 @@
 #'
 #' @description subsets user input city name from `world.cities` dataset in `maps` and creates a radius around the city center coordinates in specified meters
 #'
-#' @param city (city) string of city name for selection from `world.cities` dataset in `maps`
+#' @param city (character) string of city name for selection from `world.cities` dataset in `maps`
+#' @param radius (numeric) radius in meters around city center coordinates
 #'
-#' @return (sfc) sf polgon simple feature collection of 1 feature with WGS 84 CRS
-#'
-#' @importFrom 
+#' @return (sfc) sf polygon simple feature collection of 1 feature with WGS 84 CRS
 #'
 #' @export
 #'
