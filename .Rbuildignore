@@ -1,0 +1,9 @@
+^\.github$
+^cran-comments\.md$
+^plan\.md$
+^figures$
+^uRbano\.R$
+^.*\.Rproj$
+^\.Rproj\.user$
+^data-raw$
+^vignettes/uRbano_samp_analysis\.R$
