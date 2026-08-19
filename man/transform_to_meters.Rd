@@ -9,7 +9,7 @@ transform_to_meters(sf_data, method = "web_mercator")
 \arguments{
 \item{sf_data}{(sf object) sf object to transform}
 
-\item{method}{(string) string that represents CRS transformation to perform: "web-mercator" for EPSG 3857, "NAD" for NAD 83}
+\item{method}{(string) string that represents CRS transformation to perform: "web_mercator" for EPSG 3857, "NAD" for NAD 83}
 }
 \value{
 sf object with modified CRS
@@ -18,8 +18,8 @@ sf object with modified CRS
 Optional but recommended, transform buildings, roads and city radius features to meters datum with either web mercator EPSG 3857 or look up NAD 83 UTM zone to extract projection from the sf object parameter if spatial features are in North America
 }
 \examples{
-# transform to NAD 83 meters UTM
-rad<- uRbano::transform_to_meters(rad, method="NAD")
-
+# Create sample point and transform to meters
+pt <- sf::st_sfc(sf::st_point(c(-93.2650, 44.9778)), crs = 4326)
+pt_m <- uRbano::transform_to_meters(pt, method = "web_mercator")
 
 }
