@@ -38,7 +38,7 @@ Because some functions rely on external spatial data downloads, you may prefer t
 `uRbano` is currently available on GitHub. We recommend installing it using the `pak` package, which provides fast and reliable dependency resolution.
 
 If you do not have `pak` installed, first run:
-```{r}
+```{r, eval = FALSE}
 install.packages("pak")
 library(pak)
 pak::pak("MSP-LTER/uRbano")
@@ -51,10 +51,7 @@ pak::pak("MSP-LTER/uRbano")
 library(uRbano)
 library(sf)
 library(dplyr)
-library(ggplot2)
-library(furrr)
 library(purrr)
-library(patchwork)
 ```
 
 ## 1. Create a city-centered study extent
@@ -170,7 +167,7 @@ Depending on the package version and available methods, this object may include 
 
 The helper function below plots the full hexagonal grid using the density index as a grayscale background and overlays the sampled cells in red.
 
-```{r}
+```{r, eval = FALSE}
 plot_sample_scheme <- function(grid, sample_sf, title = NULL) {
   ggplot() +
     geom_sf(
@@ -214,7 +211,7 @@ plot_sample_scheme(hex_grid, samples$random_transect, "Random transect")
 We next evaluate how consistently each sampling design captures the full urban landscape. For each sampling scenario and sample size, we repeatedly redraw sites and compare the resulting estimates of road length and building area against the full population of grid cells.
 The bootstrap analysis below is more computationally intensive than the earlier examples. For vignette speed, users may wish to run fewer bootstrap replicates.
 
-```{r}
+```{r, eval = FALSE}
 library(sf)
 library(dplyr)
 library(purrr)

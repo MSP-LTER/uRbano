@@ -7,3 +7,6 @@
 ^\.Rproj\.user$
 ^data-raw$
 ^vignettes/uRbano_samp_analysis\.R$
+^LICENSE\.md$
+^.*\.Rcheck$
+^.*\.tar\.gz$
