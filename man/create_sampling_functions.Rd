@@ -27,9 +27,9 @@ line or polygon sf object
 generates a set of helper functions that construct different sampling scenarios of the hex grid: sample types: cardinal_transects, concentric_rings, density_stratified, simple_random, or random_transect
 }
 \examples{
-
+\dontrun{
 sampling_scenarios<-create_sampling_functions(grid)
 # plot grid cells selected by concentric rings sampling
 plot(sampling_scenarios[[2]])
-
+}
 }

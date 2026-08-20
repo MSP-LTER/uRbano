@@ -18,8 +18,8 @@ sf object of hexagon mesh with hexagons on the edge of the radius retained, not 
 uses st_make_grid to produce an sf object of a hexagon mesh across the specified city radius. If given an sf object in WGS 84, it will approximate meters given for the width of the hexagons to decimal degrees
 }
 \examples{
+\dontrun{
 # create grid of 1km hexagons across 'rad' polygon
 Rgrid<-uRbano::radius_hex_grid(rad, 1000)
-
-
+} 
 }

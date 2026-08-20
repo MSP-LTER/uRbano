@@ -12,11 +12,11 @@
 #' @export
 #'
 #' @examples
-#' 
+#' \dontrun{
 #' sampling_scenarios<-create_sampling_functions(grid)
 #' # plot grid cells selected by concentric rings sampling
 #' plot(sampling_scenarios[[2]])
-#' 
+#' }
 # SAMPLING FUNCTIONS
 create_sampling_functions <- function(hex_data, center_point=st_centroid(st_union(st_transform(hex_data, crs=4326))), sample_size=20, sample_type=NULL) {
   hex_data<-st_transform(hex_data, crs=4326)

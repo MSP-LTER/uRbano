@@ -10,8 +10,10 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' # fix invalid geometries and clip building footprints to city radius
 #' blds<-uRbano::fix_n_trim_bldgs(blds, rad)
+#' }
 
 
 fix_n_trim_bldgs<-function(blds, rad){

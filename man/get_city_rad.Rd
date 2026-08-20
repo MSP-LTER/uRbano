@@ -18,11 +18,9 @@ get_city_rad(city, radius)
 subsets user input city name from \code{world.cities} dataset in \code{maps} and creates a radius around the city center coordinates in specified meters
 }
 \examples{
+\dontrun{
 # provide city name as a string and number of meters for radius drawn from coordinates of city center
-## 30km radius polygon for Minneapois USA
+## 30km radius polygon for Minneapolis USA
 uRbano::get_city_rad(city="Minneapolis", radius=30000)
-
-
-## if more than one city is found, a numbered list will be returned with information on city's country and population for the user to specify their selection by number
-
+}
 }
