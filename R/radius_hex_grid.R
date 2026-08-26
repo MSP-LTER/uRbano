@@ -10,10 +10,10 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' # create grid of 1km hexagons across 'rad' polygon
 #' Rgrid<-uRbano::radius_hex_grid(rad, 1000)
-#' 
-#' 
+#' } 
 radius_hex_grid<-function(radius, hex_size){
   if(sf::st_crs(radius)$epsg==4326){
     gr <- sf::st_make_grid(radius, square=FALSE, cellsize = (hex_size/111000)) %>% sf::st_sf()

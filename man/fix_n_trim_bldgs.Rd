@@ -18,6 +18,8 @@ large simple features object of polygons representing building footprints in inv
 OPTIONAL BUT RECOMMENDED - reduce buildings to extent of a radius and filter out invalid geometries to avoid errors in calculating area
 }
 \examples{
+\dontrun{
 # fix invalid geometries and clip building footprints to city radius
 blds<-uRbano::fix_n_trim_bldgs(blds, rad)
+}
 }

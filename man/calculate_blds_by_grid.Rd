@@ -18,9 +18,10 @@ vector of total building area in meters that is the same length as the number of
 takes the result of radius_hex_grid and get_bldgs to sum the area of building footprints (not including height info) in meters within each hexagon of the grid
 }
 \examples{
+\dontrun{
 # calculate the summed building footprint area per each 1km hexagon in the grid
 bld_ars<-uRbano::calculate_blds_by_grid(Rgrid, blds)
 # add column for building area to the hex grid
 Rgrid<-Rgrid \%>\% mutate(bld_ars=bld_ars)
-
+}
 }
