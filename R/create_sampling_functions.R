@@ -18,8 +18,8 @@
 #' plot(sampling_scenarios[[2]])
 #' }
 # SAMPLING FUNCTIONS
-create_sampling_functions <- function(hex_data, center_point=st_centroid(st_union(st_transform(hex_data, crs=4326))), sample_size=20, sample_type=NULL) {
-  hex_data<-st_transform(hex_data, crs=4326)
+create_sampling_functions <- function(hex_data, center_point=sf::st_centroid(sf::st_union(sf::st_transform(hex_data, crs=4326))), sample_size=20, sample_type=NULL) {
+  hex_data<-sf::st_transform(hex_data, crs=4326)
   cat("Validating data...\n")
   # Check required columns - removed rarefied_richness
   required_columns <- c("rd_len", "bldg_ars", "dns_dx_")
@@ -46,11 +46,11 @@ create_sampling_functions <- function(hex_data, center_point=st_centroid(st_unio
     
     angles <- c(0, pi/2, pi, 3*pi/2)
     transect_lines <- map(angles, ~{
-      end_coords <- st_coordinates(center_point) + c(cos(.x), sin(.x)) * 100000
-      st_linestring(rbind(st_coordinates(center_point), end_coords))
+      end_coords <- sf::st_coordinates(center_point) + c(cos(.x), sin(.x)) * 100000
+      sf::st_linestring(rbind(sf::st_coordinates(center_point), end_coords))
     })
-    transects_sf <- st_sf(geometry = st_sfc(transect_lines, crs = st_crs(hex_data)))
-    transect_cells <- hex_data%>%st_filter(transects_sf)
+    transects_sf <- sf::st_sf(geometry = sf::st_sfc(transect_lines, crs = sf::st_crs(hex_data)))
+    transect_cells <- hex_data%>%sf::st_filter(transects_sf)
     
     if (nrow(transect_cells) > 0) {
       if (nrow(transect_cells) >= sample_size) {
@@ -65,11 +65,11 @@ create_sampling_functions <- function(hex_data, center_point=st_centroid(st_unio
   random_transect <- function() {
     
     angle <- runif(1, 0, 2 * pi)
-    end_coords <- st_coordinates(center_point) + c(cos(angle), sin(angle)) * 100000
-    line_matrix <- rbind(st_coordinates(center_point), end_coords)
-    line <- st_linestring(line_matrix)
-    transect_sf <- st_sf(geometry = st_sfc(line, crs = st_crs(hex_data)))
-    intersected <- hex_data%>%st_filter(transect_sf)
+    end_coords <- sf::st_coordinates(center_point) + c(cos(angle), sin(angle)) * 100000
+    line_matrix <- rbind(sf::st_coordinates(center_point), end_coords)
+    line <- sf::st_linestring(line_matrix)
+    transect_sf <- sf::st_sf(geometry = sf::st_sfc(line, crs = sf::st_crs(hex_data)))
+    intersected <- hex_data%>%sf::st_filter(transect_sf)
     
     if (nrow(intersected) > 0) {
       if (nrow(intersected) >= sample_size) {
@@ -93,16 +93,16 @@ create_sampling_functions <- function(hex_data, center_point=st_centroid(st_unio
     
     for (j in seq_along(radii)) {
       ring_geom <- if (j == 1) {
-        st_buffer(center_point, radii[j])
+        sf::st_buffer(center_point, radii[j])
       } else {
-        st_difference(
-          st_buffer(center_point, radii[j]),
-          st_buffer(center_point, radii[j-1])
+        sf::st_difference(
+          sf::st_buffer(center_point, radii[j]),
+          sf::st_buffer(center_point, radii[j-1])
         )
       }
       
-      ring_sf <- st_sf(geometry = st_sfc(ring_geom), crs = st_crs(hex_data))
-      cells_in_ring <- st_intersection(hex_data, ring_sf)
+      ring_sf <- sf::st_sf(geometry = sf::st_sfc(ring_geom), crs = sf::st_crs(hex_data))
+      cells_in_ring <- sf::st_intersection(hex_data, ring_sf)
       
       if (nrow(cells_in_ring) > 0) {
         n_to_sample <- min(nrow(cells_in_ring), samples_per_ring)

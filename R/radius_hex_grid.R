@@ -1,6 +1,6 @@
 #' @title create hex grid of user-specified resolution across city radius
 #'
-#' @description uses st_make_grid to produce an sf object of a hexagon mesh across the specified city radius. If given an sf object in WGS 84, it will approximate meters given for the width of the hexagons to decimal degrees
+#' @description uses sf::st_make_grid to produce an sf object of a hexagon mesh across the specified city radius. If given an sf object in WGS 84, it will approximate meters given for the width of the hexagons to decimal degrees
 #'
 #' @param radius (sf object) sf object, usually radius of a city from get_city_rad, but could be another sf object
 #' @param hex_size (numeric) number of meters across that each hex cell should be
@@ -18,7 +18,7 @@ radius_hex_grid<-function(radius, hex_size){
   if(sf::st_crs(radius)$epsg==4326){
     gr <- sf::st_make_grid(radius, square=FALSE, cellsize = (hex_size/111000)) %>% sf::st_sf()
     warning("converting hex size to units of lat/lon, size is approximate conversion to meters")
-  }else{gr <- sf::st_make_grid(radius, square=FALSE, cellsize = hex_size) %>% st_sf()}
+  }else{gr <- sf::st_make_grid(radius, square=FALSE, cellsize = hex_size) %>% sf::st_sf()}
   #get predicate for where hexes intersect so they don't get cut off at the border
   ig = lengths(sf::st_intersects(gr, radius)) > 0
   gr<-gr%>%dplyr::mutate(pred=ig)

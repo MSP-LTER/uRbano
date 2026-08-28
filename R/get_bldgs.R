@@ -45,7 +45,7 @@ get_bldgs<-function(region1, region2=NULL){
       infile1 <- tempfile()
       try(download.file(ft_link,infile1,method="curl"))
       if (is.na(file.size(infile1))) download.file(ft_link,infile1,method="auto")
-      foots<-st_read(unzip(infile1))
+      foots<-sf::st_read(unzip(infile1))
       unlink(infile1)
     }else if(region %in% Ca){
       region<-gsub(" ", "", region)
@@ -54,7 +54,7 @@ get_bldgs<-function(region1, region2=NULL){
       infile1 <- tempfile()
       try(download.file(ft_link,infile1,method="curl"))
       if (is.na(file.size(infile1))) download.file(ft_link,infile1,method="auto")
-      foots<-st_read(unzip(infile1))
+      foots<-sf::st_read(unzip(infile1))
       unlink(infile1)
     }else if(region %in% all_regions$Location){
       fts<-all_regions%>%filter(Location==region)
@@ -65,7 +65,7 @@ get_bldgs<-function(region1, region2=NULL){
       }
       combined_foots <- do.call(rbind, foot_urls)
       cnty_fts<-geojson_sfc(combined_foots$X1)
-      foots<-st_as_sf(cnty_fts, crs=4326)
+      foots<-sf::st_as_sf(cnty_fts, crs=4326)
     }else{warning("cannot find buildings for that region")}
     #ft_link<-paste0("https://minedbuildings.z5.web.core.windows.net/legacy/usbuildings-v2/", state, ".geojson.zip")
     

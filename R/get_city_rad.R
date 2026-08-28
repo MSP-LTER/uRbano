@@ -46,8 +46,8 @@ get_city_rad <- function(city, radius) {
   }
   
   # Convert to sf object and create buffer
-  cty_coords <- st_as_sf(cty, coords = c("long", "lat"), crs = 4326)
-  cty_crc <- st_buffer(cty_coords, radius)
+  cty_coords <- sf::st_as_sf(cty, coords = c("long", "lat"), crs = 4326)
+  cty_crc <- sf::st_buffer(cty_coords, radius)
   
   return(cty_crc)
 }

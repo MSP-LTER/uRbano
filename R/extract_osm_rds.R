@@ -16,7 +16,7 @@
 #' }
 #function to get OSM roads from overpass API for the extent extracted from the city radius
 extract_osm_rds<-function(city_radius){
-  if(st_crs(city_radius)$epsg!=4326){city_radius<-st_transform(city_radius, crs=4326)}
+  if(sf::st_crs(city_radius)$epsg!=4326){city_radius<-sf::st_transform(city_radius, crs=4326)}
   cty_ex<-terra::ext(city_radius)
   
   # Capture the user's existing agent settings
