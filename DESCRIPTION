@@ -18,6 +18,7 @@ Imports:
     maps,
     mgcv,
     osmdata,
+    osmextract,
     purrr,
     readr,
     sf,

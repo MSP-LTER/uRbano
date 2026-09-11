@@ -2,24 +2,63 @@
 % Please edit documentation in R/extract_osm_rds.R
 \name{extract_osm_rds}
 \alias{extract_osm_rds}
-\title{Get road features from OSM Overpass API for extent of city radius}
+\title{Get road features from OpenStreetMap for extent of city radius}
 \usage{
-extract_osm_rds(city_radius)
+extract_osm_rds(
+  city_radius,
+  method = c("osmextract", "overpass"),
+  place = NULL,
+  highway_values = c("primary", "motorway_link", "unclassified", "tertiary",
+    "residential", "motorway", "secondary", "service", "trunk", "living_street",
+    "trunk_link", "primary_link", "secondary_link", "tertiary_link", "road"),
+  timeout = 120,
+  quiet = FALSE
+)
 }
 \arguments{
-\item{city_radius}{(sfc) can be any sf object from which an extent bounding box can be drawn}
+\item{city_radius}{(sfc / sf) Polygon or study extent from which roads will be extracted.}
+
+\item{method}{(character) Extraction backend: \code{"osmextract"} (default) or \code{"overpass"}.}
+
+\item{place}{(character) Optional region/state/country name(s) for \code{method = "osmextract"} (e.g., \code{"Minnesota"}, or a vector like \code{c("North Dakota", "Minnesota")} for border cities).
+If \code{NULL} (default), the regional extract is automatically determined via spatial matching from \code{city_radius}.}
+
+\item{highway_values}{(character vector) OSM highway values to extract.}
+
+\item{timeout}{(numeric) Query timeout in seconds when \code{method = "overpass"}. Default is 120.}
+
+\item{quiet}{(logical) Whether to suppress progress messages. Default is \code{FALSE}.}
 }
 \value{
-(LINESTRING sfc) sf object of line features as road segments of OSM key "highway" from within extent of given polygon argument
+(LINESTRING sf) Simple features collection of line features matching the requested highway tags clipped to the extent of \code{city_radius}.
 }
 \description{
-Counts the number of occurrences of each element in both provided vectors and then calculates the difference in that count between the first and second input vector. Counting of NAs in addition to non-NA values is supported.
+Extracts road network line features (OSM key "highway") within the extent of a given study polygon.
+Supports two extraction backends: "osmextract" (recommended, downloads and clips a regional .pbf dump from Geofabrik,
+avoiding API quotas and timeouts) and "overpass" (queries the live Overpass API directly).
+}
+\details{
+When using \code{method = "osmextract"}, regional \code{.osm.pbf} extracts are automatically downloaded from
+Geofabrik and cached in the persistent directory returned by \code{osmextract::oe_download_directory()}
+(e.g. within the user's application support directory). Downloads are reused across calls for fast repeat queries.
+To free up disk space, users can clear this download cache at any time using \code{osmextract::oe_clean()}.
+
+For border cities or study extents intersecting multiple administrative areas, the function automatically
+computes the minimal set of constituent sub-regions (e.g. states or provinces) to cover the extent without
+downloading larger parent extracts (e.g. continent-level dumps).
 }
 \examples{
 \dontrun{
-#result from get_city_rad
-rad<-uRbano::get_city_rad("Minneapolis",30000)
-# Count difference in all values between the two
-uRbano::extract_osm_rds(city_radius=rad)
+# Get city radius for Minneapolis
+rad <- uRbano::get_city_rad("Minneapolis", radius = 30000)
+
+# Extract roads using regional PBF extracts (recommended for large radii)
+rds <- uRbano::extract_osm_rds(city_radius = rad, method = "osmextract")
+
+# Extract roads for a border city using multiple regional extracts:
+# rds <- uRbano::extract_osm_rds(city_radius = rad, place = c("North Dakota", "Minnesota"))
+
+# Extract roads using the live Overpass API
+rds <- uRbano::extract_osm_rds(city_radius = rad, method = "overpass")
 }
 }
