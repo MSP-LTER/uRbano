@@ -16,24 +16,20 @@
 #' }
 
 
-fix_n_trim_bldgs<-function(blds, rad){
-  
-  cty_ex<-terra::ext(rad)
-  bbox <- sf::st_bbox(cty_ex, crs = 4326) 
+fix_n_trim_bldgs <- function(blds, rad) {
+  cty_ex <- terra::ext(rad)
+  bbox <- sf::st_bbox(cty_ex, crs = 4326)
   bbox_sf <- sf::st_as_sfc(bbox)
-  sf::sf_use_s2(FALSE) #turn off spherical geometry
-  blds<-sf::st_filter(blds, bbox_sf)
+
+  old_s2 <- sf::sf_use_s2(FALSE)               # turns it off, saves the old value (TRUE)
+  on.exit(sf::sf_use_s2(old_s2), add = TRUE)   # turns it back on when the function exits
+
+  blds <- sf::st_filter(blds, bbox_sf)
   gc()
-  
-  invalid_geometries <- blds[!sf::st_is_valid(blds), ] 
-  if(nrow(invalid_geometries)>0){
-    x_blds<-as.numeric(rownames(invalid_geometries))
-    blds<-blds[-c(x_blds),]
-    sf::sf_use_s2(TRUE)
-  }else{
-    sf::sf_use_s2(TRUE)
-    return(blds)
-  }
+
+  blds <- blds[which(sf::st_is_valid(blds)), ]
+
+  return(blds)
 }
 
 
