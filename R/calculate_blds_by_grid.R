@@ -39,5 +39,5 @@ calculate_blds_by_grid<-function(grid, blds){
   
   
   # Return as a numeric vector
-  return(drop_units(bld_jn$tarea))
+  return(units::drop_units(bld_jn$tarea))
 }
