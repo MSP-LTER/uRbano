@@ -30,8 +30,8 @@ create_sampling_functions <- function(hex_data, center_point=sf::st_centroid(sf:
   }
   
   # Remove NA values - removed rarefied_richness
-  clean_data <- hex_data %>%
-    filter(!is.na(rd_len), !is.na(bldg_ars), !is.na(dns_dx_))
+  clean_data <- subset(hex_data, !is.na(rd_len) & !is.na(bldg_ars) & !is.na(dns_dx_))
+
   
   # Check if we have enough data
   if (nrow(clean_data) < 10) {
@@ -45,16 +45,16 @@ create_sampling_functions <- function(hex_data, center_point=sf::st_centroid(sf:
   cardinal_transects <- function() {
     
     angles <- c(0, pi/2, pi, 3*pi/2)
-    transect_lines <- map(angles, ~{
+    transect_lines <- purrr::map(angles, ~{
       end_coords <- sf::st_coordinates(center_point) + c(cos(.x), sin(.x)) * 100000
       sf::st_linestring(rbind(sf::st_coordinates(center_point), end_coords))
     })
     transects_sf <- sf::st_sf(geometry = sf::st_sfc(transect_lines, crs = sf::st_crs(hex_data)))
-    transect_cells <- hex_data%>%sf::st_filter(transects_sf)
+    transect_cells <- sf::st_filter(hex_data, transects_sf)
     
     if (nrow(transect_cells) > 0) {
       if (nrow(transect_cells) >= sample_size) {
-        return(sample_n(transect_cells, sample_size))
+        return(dplyr::sample_n(transect_cells, sample_size))
       }
       return(transect_cells)
     }
@@ -69,11 +69,11 @@ create_sampling_functions <- function(hex_data, center_point=sf::st_centroid(sf:
     line_matrix <- rbind(sf::st_coordinates(center_point), end_coords)
     line <- sf::st_linestring(line_matrix)
     transect_sf <- sf::st_sf(geometry = sf::st_sfc(line, crs = sf::st_crs(hex_data)))
-    intersected <- hex_data%>%sf::st_filter(transect_sf)
+    intersected <- sf::st_filter(hex_data, transect_sf)
     
     if (nrow(intersected) > 0) {
       if (nrow(intersected) >= sample_size) {
-        return(sample_n(intersected, sample_size))
+        return(dplyr::sample_n(intersected, sample_size))
       }
       return(intersected)
     }
@@ -82,7 +82,7 @@ create_sampling_functions <- function(hex_data, center_point=sf::st_centroid(sf:
   
   # Simple random sampling
   simple_random <- function() {
-    sample_n(hex_data, sample_size)
+    dplyr::sample_n(hex_data, sample_size)
   }
   
   # Concentric rings
@@ -106,7 +106,7 @@ create_sampling_functions <- function(hex_data, center_point=sf::st_centroid(sf:
       
       if (nrow(cells_in_ring) > 0) {
         n_to_sample <- min(nrow(cells_in_ring), samples_per_ring)
-        sampled <- sample_n(cells_in_ring, n_to_sample)
+        sampled <- dplyr::sample_n(cells_in_ring, n_to_sample)
         
         sampled$ring_id <- j
         sampled$inner_radius <- ifelse(j == 1, 0, radii[j-1])
@@ -115,9 +115,9 @@ create_sampling_functions <- function(hex_data, center_point=sf::st_centroid(sf:
       }
     }
     
-    sampled_cells <- bind_rows(sampled_cells_list)
+    sampled_cells <- dplyr::bind_rows(sampled_cells_list)
     if (nrow(sampled_cells) > sample_size) {
-      sample_n(sampled_cells, sample_size)
+      dplyr::sample_n(sampled_cells, sample_size)
     } else {
       sampled_cells
     }
@@ -128,16 +128,16 @@ create_sampling_functions <- function(hex_data, center_point=sf::st_centroid(sf:
     density_levels <- unique(hex_data$dns_dx_)
     samples_per_level <- ceiling(sample_size / length(density_levels))
     stratified_list <- purrr::map(density_levels, ~{
-      subset <- filter(hex_data, dns_dx_ == .x)
+      subset <- subset(hex_data, dns_dx_ == .x)
       if (nrow(subset) > 0) {
         n_to_sample <- min(nrow(subset), samples_per_level)
-        sample_n(subset, n_to_sample)
+        dplyr::sample_n(subset, n_to_sample)
       }
     })
     
-    sampled_cells <- bind_rows(stratified_list)
+    sampled_cells <- dplyr::bind_rows(stratified_list)
     if (nrow(sampled_cells) > sample_size) {
-      sample_n(sampled_cells, sample_size)
+      dplyr::sample_n(sampled_cells, sample_size)
     } else {
       sampled_cells
     }
@@ -170,3 +170,4 @@ create_sampling_functions <- function(hex_data, center_point=sf::st_centroid(sf:
   
   
 }
+
