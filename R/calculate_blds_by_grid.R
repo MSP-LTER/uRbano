@@ -22,7 +22,7 @@ calculate_blds_by_grid<-function(grid, blds){
   }
   
   #ensure parameters have same CRS
-  if ((crs(grid)) != (crs(blds))) {
+  if ((sf::st_crs(grid)) != (sf::st_crs(blds))) {
     stop("Both grid and roads must be transformed to same UTM zone, use transform_US_utm()")
   }
   
