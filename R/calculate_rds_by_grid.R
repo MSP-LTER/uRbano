@@ -38,5 +38,5 @@ calculate_rds_by_grid <- function(grid, rds) {
   rd_jn<-dplyr::left_join(grid, sf::st_drop_geometry(sumlen), by="ID")
   
   # Return as a numeric vector
-  return(drop_units(rd_jn$tlen))
+  return(units::drop_units(rd_jn$tlen))
 }
