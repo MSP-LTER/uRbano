@@ -23,7 +23,7 @@ calculate_rds_by_grid <- function(grid, rds) {
   }
   
   #ensure parameters have same CRS
-  if ((crs(grid)) != (crs(rds))) {
+  if ((sf::st_crs(grid)) != (sf::st_crs(rds))) {
     stop("Both grid and roads must be transformed to same UTM zone, use transform_US_utm()")
   }
   
