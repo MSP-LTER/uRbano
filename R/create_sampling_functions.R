@@ -19,7 +19,7 @@
 #' }
 # SAMPLING FUNCTIONS
 create_sampling_functions <- function(hex_data, center_point=sf::st_centroid(sf::st_union(sf::st_transform(hex_data, crs=4326))), sample_size=20, sample_type=NULL) {
-  hex_data<-sf::st_transform(hex_data, crs=4326)
+  #hex_data<-sf::st_transform(hex_data, crs=4326)
   cat("Validating data...\n")
   # Check required columns - removed rarefied_richness
   required_columns <- c("rd_len", "bldg_ars", "dns_dx_")
