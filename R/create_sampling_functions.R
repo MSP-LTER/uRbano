@@ -22,11 +22,11 @@
 create_sampling_functions <- function(hex_data,density_col, center_point=sf::st_centroid(sf::st_union(hex_data)), sample_size=20, sample_type=NULL) {
   
   # Remove NA values - removed rarefied_richness
-  clean_data <- subset(hex_data, !is.na(density_col))
+  clean_data <- na.omit(hex_data[[density_col]])
 
   
   # Check if we have enough data
-  if (nrow(clean_data) < 10) {
+  if (nrow(hex_data) < 10) {
     stop("Not enough complete cases (minimum 10 required)")
   }
   
@@ -117,10 +117,10 @@ create_sampling_functions <- function(hex_data,density_col, center_point=sf::st_
   
   # Density stratified sampling
   density_stratified <- function() {
-    density_levels <- unique(hex_data$density_col)
+    density_levels <- unique(hex_data[[density_col]])
     samples_per_level <- ceiling(sample_size / length(density_levels))
     stratified_list <- purrr::map(density_levels, ~{
-      subset <- subset(hex_data, density_col == .x)
+      subset <- subset(hex_data, hex_data[[density_col]] == .x)
       if (nrow(subset) > 0) {
         n_to_sample <- min(nrow(subset), samples_per_level)
         dplyr::sample_n(subset, n_to_sample)
