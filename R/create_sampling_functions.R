@@ -22,7 +22,7 @@
 create_sampling_functions <- function(hex_data,density_col, center_point=sf::st_centroid(sf::st_union(hex_data)), sample_size=20, sample_type=NULL) {
   
   # Remove NA values - removed rarefied_richness
-  clean_data <- na.omit(hex_data[[density_col]])
+  #clean_data <- na.omit(hex_data[[density_col]])
 
   
   # Check if we have enough data
@@ -30,9 +30,9 @@ create_sampling_functions <- function(hex_data,density_col, center_point=sf::st_
     stop("Not enough complete cases (minimum 10 required)")
   }
   
-  cat("Data validation passed. Clean dataset has", nrow(clean_data), "grids\n")
+  #cat("Data validation passed. Clean dataset has", nrow(clean_data), "grids\n")
   
-  hex_data<-clean_data
+  #hex_data<-clean_data
   # Cardinal transects
   cardinal_transects <- function() {
     
