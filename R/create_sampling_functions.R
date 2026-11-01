@@ -18,7 +18,7 @@
 #' plot(sampling_scenarios[[2]])
 #' }
 # SAMPLING FUNCTIONS
-create_sampling_functions <- function(hex_data, center_point=sf::st_centroid(sf::st_union(sf::st_transform(hex_data, crs=4326))), sample_size=20, sample_type=NULL) {
+create_sampling_functions <- function(hex_data, center_point=sf::st_centroid(sf::st_union(hex_data)), sample_size=20, sample_type=NULL) {
   #hex_data<-sf::st_transform(hex_data, crs=4326)
   cat("Validating data...\n")
   # Check required columns - removed rarefied_richness
