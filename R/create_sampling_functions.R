@@ -3,6 +3,7 @@
 #' @description generates a set of helper functions that construct different sampling scenarios of the hex grid: sample types: cardinal_transects, concentric_rings, density_stratified, simple_random, or random_transect
 #'
 #' @param hex_data (sf object) output hex built density grid with a density index (dns_dx_) column that shows numeric levels of road and building density
+#' @param density_col (vector) the column in hex data that you wish to base the density-stratified sampling on
 #' @param center_point (sf object) single point sf object that defaults to the centroid of the union of the grid radius
 #' @param sample_size (number) number of samples to generate, defaults to 10
 #' @param sample_type can specify 5 type of sampling scenarios, defaults to a list with all 5
@@ -18,19 +19,10 @@
 #' plot(sampling_scenarios[[2]])
 #' }
 # SAMPLING FUNCTIONS
-create_sampling_functions <- function(hex_data, center_point=sf::st_centroid(sf::st_union(hex_data)), sample_size=20, sample_type=NULL) {
-  #hex_data<-sf::st_transform(hex_data, crs=4326)
-  cat("Validating data...\n")
-  # Check required columns - removed rarefied_richness
-  required_columns <- c("rd_len", "bldg_ars", "dns_dx_")
-  missing_columns <- required_columns[!required_columns %in% names(hex_data)]
-  
-  if (length(missing_columns) > 0) {
-    stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
-  }
+create_sampling_functions <- function(hex_data,density_col, center_point=sf::st_centroid(sf::st_union(hex_data)), sample_size=20, sample_type=NULL) {
   
   # Remove NA values - removed rarefied_richness
-  clean_data <- subset(hex_data, !is.na(rd_len) & !is.na(bldg_ars) & !is.na(dns_dx_))
+  clean_data <- subset(hex_data, !is.na(density_col))
 
   
   # Check if we have enough data
@@ -125,10 +117,10 @@ create_sampling_functions <- function(hex_data, center_point=sf::st_centroid(sf:
   
   # Density stratified sampling
   density_stratified <- function() {
-    density_levels <- unique(hex_data$dns_dx_)
+    density_levels <- unique(hex_data$density_col)
     samples_per_level <- ceiling(sample_size / length(density_levels))
     stratified_list <- purrr::map(density_levels, ~{
-      subset <- subset(hex_data, dns_dx_ == .x)
+      subset <- subset(hex_data, density_col == .x)
       if (nrow(subset) > 0) {
         n_to_sample <- min(nrow(subset), samples_per_level)
         dplyr::sample_n(subset, n_to_sample)
